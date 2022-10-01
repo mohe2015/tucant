@@ -1,76 +1,11 @@
-use std::{borrow::Borrow, rc::Rc, iter::repeat, fmt::Write, cell::RefCell};
+use std::{borrow::Borrow, cell::RefCell, fmt::Write, iter::repeat, rc::Rc};
 
 use actix_web::web::Data;
-use html5ever::{parse_document, tendril::TendrilSink, QualName, LocalName};
-use markup5ever_rcdom::{Node, NodeData, RcDom, Handle};
-use scraper::Html;
+use html5ever::{local_name, namespace_url, ns};
+use html5ever::{parse_document, tendril::TendrilSink, LocalName, QualName};
+use scraper::{Html, ElementRef};
+use scraper::node::Element;
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
-use html5ever::{local_name, ns, namespace_url};
-
-fn stringify_internal(indent: usize, node: &Node, s: &mut String) {
-    // FIXME: don't allocate
-    write!(s, "{}", repeat(" ").take(indent).collect::<String>()).unwrap();
-    match node.data {
-        NodeData::Document => writeln!(s, "#Document").unwrap(),
-
-        NodeData::Doctype {
-            ref name,
-            ref public_id,
-            ref system_id,
-        } => writeln!(s, "<!DOCTYPE {} \"{}\" \"{}\">", name, public_id, system_id).unwrap(),
-
-        NodeData::Text { ref contents } => {
-            writeln!(s, "#text: {}", contents.borrow().escape_default()).unwrap()
-        },
-
-        NodeData::Comment { ref contents } => writeln!(s, "<!-- {} -->", contents.escape_default()).unwrap(),
-
-        NodeData::Element {
-            ref name,
-            ref attrs,
-            ..
-        } => {
-            assert!(name.ns == ns!(html));
-            writeln!(s, "<{}", name.local).unwrap();
-            for attr in attrs.borrow().iter() {
-                assert!(attr.name.ns == ns!());
-                writeln!(s," {}=\"{}\"", attr.name.local, attr.value).unwrap();
-            }
-            writeln!(s, ">").unwrap();
-        },
-
-        NodeData::ProcessingInstruction { .. } => unreachable!(),
-    }
-
-    for child in node.children.borrow().iter() {
-        stringify_internal(indent + 4, child, s);
-    }
-}
-
-fn stringify(node: &Node) -> String {
-    let mut string = String::new();
-    stringify_internal(0, node, &mut string);
-    string
-}
-
-fn find_child_with(children: RefCell<Vec<Rc<Node>>>, tag: &str) -> Rc<Node> {
-    for child in children.borrow().iter() {
-        if let Node {
-            data:
-                NodeData::Element {
-                    name: QualName { prefix: None, ns: ns!(html), local: LocalName { .. } },
-                    attrs,
-                    template_contents,
-                    mathml_annotation_xml_integration_point,
-                },
-            ..
-        } = child.borrow()
-        {
-            return child
-        }
-    }
-    panic!();
-}
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
@@ -100,59 +35,50 @@ async fn main() -> anyhow::Result<()> {
     };
 
     for module in modules {
-        let dom = parse_document(RcDom::default(), Default::default())
-            .from_utf8()
-            .one(module.content.as_bytes());
+        let fragment = Html::parse_fragment(&module.content);
+        let element = fragment.root_element();
 
-        if !dom.errors.is_empty() {
-            println!("\nParse errors:");
-            for err in dom.errors.iter() {
-                println!("    {}", err);
-            }
-        }
+        println!("{}", element.inner_html());
 
-        let children = dom.document.children.borrow_mut();
-        let children = children.iter().peekable();
+        let mut children = element.children().peekable();
 
-        for child in children {
-            if let Node {
-                data:
-                    NodeData::Element {
-                        name: QualName { prefix: None, ns: ns!(html), local: local_name!("html") },
-                        attrs,
-                        template_contents,
-                        mathml_annotation_xml_integration_point,
+        while let Some(_) = children.peek() {
+            let child = children.next().unwrap();
+            match child.value() {
+                scraper::Node::Element(Element {
+                    name: QualName {
+                        local,
+                        ..
                     },
-                ..
-            } = child.borrow()
-            {
-                println!("got them {}", stringify(child));
-            } else {
-                //println!("fail {}", stringify(child));
+                    ..
+                }) if local == "b" => {
+                    println!("{}", ElementRef::wrap(child).unwrap().inner_html())
+                },
+                _ => todo!(),
             }
         }
 
         break;
-
-        /*
-        <b>text: </b>
-        ...
-        <br>
-        <br>
-        */
-
-        /*
-        <!-- Start Descriptions -->
-        */
-
-        /*
-        <br>
-        <br>
-        <b>text</b>
-        ":"
-        <br>
-        */
     }
+
+    /*
+    <b>text: </b>
+    ...
+    <br>
+    <br>
+    */
+
+    /*
+    <!-- Start Descriptions -->
+    */
+
+    /*
+    <br>
+    <br>
+    <b>text</b>
+    ":"
+    <br>
+    */
 
     Ok(())
 }
