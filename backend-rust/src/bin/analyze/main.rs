@@ -3,7 +3,7 @@ use ego_tree::NodeRef;
 
 use html5ever::QualName;
 use itertools::Itertools;
-use scraper::node::Element;
+use scraper::node::{Element, Comment, Text};
 use scraper::{ElementRef, Html, Node};
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
 
@@ -57,6 +57,13 @@ async fn main() -> anyhow::Result<()> {
             .filter(|c| c.value().as_text().map(|t| t.trim() != "").unwrap_or(true))
             .multipeek();
 
+        /*
+        <b>text: </b>
+        ...
+        <br>
+        <br>
+        */
+
         let child = children.next().unwrap();
         match child.value() {
             scraper::Node::Element(Element {
@@ -82,6 +89,13 @@ async fn main() -> anyhow::Result<()> {
                 })) if local == "br" => {
                     println!("skipping {}", debug_print(&child.unwrap()));
                     false
+                }
+                Some(Node::Comment(Comment {
+                    comment
+                })) if comment.trim() == "Start Descriptions" => {
+                    children.next();
+                    println!("NEXT PART");
+                    break;
                 }
                 None => break,
                 _ => true,
@@ -130,27 +144,143 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
+        /*
+        <br>
+        <br>
+        <b>text</b>
+        ":"
+        <br>
+        */
+
+        let child = children.next().unwrap();
+        match child.value() {
+            scraper::Node::Element(Element {
+                name: QualName { local, .. },
+                ..
+            }) if local == "b" =>
+            {
+                println!("section2_start {}", debug_print(&child))
+            }
+            other => panic!("{:?}", other),
+        }
+
+        let child = children.next().unwrap();
+        match child.value() {
+            scraper::Node::Text(Text {
+                text
+            }) if text.as_ref() == ":" =>
+            {
+                println!("section2_start {}", debug_print(&child))
+            }
+            other => panic!("{:?}", other),
+        }
+
+        let child = children.next().unwrap();
+        match child.value() {
+            scraper::Node::Element(Element {
+                name: QualName { local, .. },
+                ..
+            }) if local == "br" =>
+            {
+                println!("section2_start {}", debug_print(&child))
+            }
+            other => panic!("{:?}", other),
+        }
+
+        loop {
+            let child = children.peek();
+            if match child.map(NodeRef::value) {
+                Some(scraper::Node::Element(Element {
+                    name: QualName { local, .. },
+                    ..
+                })) if local == "br" => {
+                    println!("skipping2 {}", debug_print(&child.unwrap()));
+                    false
+                }
+                None => break,
+                _ => true,
+            } {
+                println!("this_section2 {}", debug_print(&child.unwrap()));
+                children.next();
+                continue;
+            }
+
+            let child = children.peek();
+            if match child.map(NodeRef::value) {
+                Some(scraper::Node::Element(Element {
+                    name: QualName { local, .. },
+                    ..
+                })) if local == "br" => {
+                    println!("skipping2 {}", debug_print(&child.unwrap()));
+                    false
+                }
+                None => break,
+                _ => true,
+            } {
+                println!("this_section2 {}", debug_print(&child.unwrap()));
+                children.next();
+                continue;
+            }
+
+            let child = children.peek();
+            if match child.map(NodeRef::value) {
+                Some(scraper::Node::Element(Element {
+                    name: QualName { local, .. },
+                    ..
+                })) if local == "b" => {
+                    println!("skipping2 {}", debug_print(&child.unwrap()));
+                    false
+                }
+                None => break,
+                _ => true,
+            } {
+                println!("this_section2 {}", debug_print(&child.unwrap()));
+                children.next();
+                continue;
+            }
+
+            let child = children.peek();
+            if match child.map(NodeRef::value) {
+                Some(scraper::Node::Text(Text {
+                    text
+                })) if text.as_ref() == ":" => {
+                    println!("skipping2 {}", debug_print(&child.unwrap()));
+                    false
+                }
+                None => break,
+                _ => true,
+            } {
+                println!("this_section2 {}", debug_print(&child.unwrap()));
+                children.next();
+                continue;
+            }
+
+            let child = children.peek();
+            if match child.map(NodeRef::value) {
+                Some(scraper::Node::Element(Element {
+                    name: QualName { local, .. },
+                    ..
+                })) if local == "br" => {
+                    println!("skipping {}", debug_print(&child.unwrap()));
+                    false
+                }
+                None => break,
+                _ => true,
+            } {
+                println!("this_section {}", debug_print(&child.unwrap()));
+                children.next();
+            } else {
+                children.next();
+                children.next();
+                let child = children.next();
+                println!("next_section {}", debug_print(&child.unwrap()));
+                children.next();
+                children.next();
+            }
+        }
+
         break;
     }
-
-    /*
-    <b>text: </b>
-    ...
-    <br>
-    <br>
-    */
-
-    /*
-    <!-- Start Descriptions -->
-    */
-
-    /*
-    <br>
-    <br>
-    <b>text</b>
-    ":"
-    <br>
-    */
 
     Ok(())
 }
