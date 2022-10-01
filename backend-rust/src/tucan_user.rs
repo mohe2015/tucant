@@ -325,7 +325,7 @@ impl TucanUser {
             _ => panic!(),
         };
 
-        let name = url_element.inner_html();
+        let _name = url_element.inner_html();
 
         Ok(ModuleMenu {
             tucan_id: url.path,
@@ -404,7 +404,7 @@ impl TucanUser {
             .last()
             .unwrap();
 
-        let name = url_element.inner_html();
+        let _name = url_element.inner_html();
 
         let child_type = match (submenu_list, modules_list) {
             (_, Some(_)) => 2,

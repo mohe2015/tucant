@@ -1,9 +1,9 @@
-use std::{borrow::Borrow, cell::RefCell, fmt::Write, iter::repeat, rc::Rc};
+
 
 use actix_web::web::Data;
 use ego_tree::NodeRef;
-use html5ever::{local_name, namespace_url, ns};
-use html5ever::{parse_document, tendril::TendrilSink, LocalName, QualName};
+
+use html5ever::{QualName};
 use itertools::Itertools;
 use scraper::node::Element;
 use scraper::{ElementRef, Html, Node};
