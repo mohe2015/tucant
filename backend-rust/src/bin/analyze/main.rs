@@ -124,6 +124,14 @@ async fn main() -> anyhow::Result<()> {
                     //println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
+                Some(Node::Comment(Comment {
+                    comment
+                })) if comment.trim() == "Start Descriptions" => {
+                    children.next();
+                    children.next();
+                    println!("NEXT PART");
+                    break;
+                },
                 None => break,
                 _ => true,
             } {
@@ -141,6 +149,15 @@ async fn main() -> anyhow::Result<()> {
                     //println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
+                Some(Node::Comment(Comment {
+                    comment
+                })) if comment.trim() == "Start Descriptions" => {
+                    children.next();
+                    children.next();
+                    children.next();
+                    println!("NEXT PART");
+                    break;
+                },
                 None => break,
                 _ => true,
             } {
