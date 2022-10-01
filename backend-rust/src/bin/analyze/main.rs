@@ -9,6 +9,18 @@ use scraper::node::Element;
 use scraper::{ElementRef, Html, Node};
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
 
+pub fn debug_print(node: &NodeRef<Node>) -> String {
+    match node.value() {
+        Node::Document => format!("DOCUMENT"),
+        Node::Fragment => format!("FRAGMENT"),
+        Node::Doctype(_) => format!("DOCTYPE"),
+        Node::Comment(comment) => format!("COMMENT {}", comment.trim()),
+        Node::Text(text) => format!("TEXT {}", text.trim()),
+        Node::Element(_) => format!("ELEMENT {}", ElementRef::wrap(*node).unwrap().html()),
+        Node::ProcessingInstruction(_) => format!("PROCESSINGINSTRUCTION"),
+    }
+}
+
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
@@ -66,7 +78,7 @@ async fn main() -> anyhow::Result<()> {
             {
                 println!(
                     "section_start {}",
-                    ElementRef::wrap(child).unwrap().inner_html()
+                    debug_print(&child)
                 )
             }
             other => panic!("{:?}", other),
@@ -88,7 +100,7 @@ async fn main() -> anyhow::Result<()> {
             } {
                 println!(
                     "this_section {}",
-                    ElementRef::wrap(*child.unwrap()).unwrap().inner_html()
+                    debug_print(&child.unwrap())
                 );
                 children.next();
                 continue;
@@ -109,7 +121,7 @@ async fn main() -> anyhow::Result<()> {
             } {
                 println!(
                     "this_section {}",
-                    ElementRef::wrap(*child.unwrap()).unwrap().inner_html()
+                    debug_print(&child.unwrap())
                 );
                 children.next();
                 continue;
@@ -130,13 +142,13 @@ async fn main() -> anyhow::Result<()> {
             } {
                 println!(
                     "this_section {}",
-                    ElementRef::wrap(*child.unwrap()).unwrap().inner_html()
+                    debug_print(&child.unwrap())
                 );
                 children.next();
             } else {
                 println!(
                     "next_section {}",
-                    ElementRef::wrap(*child.unwrap()).unwrap().inner_html()
+                    debug_print(&child.unwrap())
                 );
                 children.next();
                 children.next();
