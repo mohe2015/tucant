@@ -1,5 +1,8 @@
+use std::borrow::Borrow;
+
 use actix_web::web::Data;
-use scraper::Html;
+use ego_tree::{iter::Edge, NodeRef};
+use scraper::{Html};
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
 
 #[actix_web::main]
@@ -32,9 +35,14 @@ async fn main() -> anyhow::Result<()> {
     for module in modules {
         let html_doc = Html::parse_document(&module.content);
 
-        html_doc.root_element();
+        let element = html_doc.root_element();
 
-        html_doc.tree;
+        let mut traverse = element.traverse().peekable();
+
+        loop {
+            if let Some(Edge::Open(NodeRef { node, .. })) = traverse.peek() {
+            }
+        }
 
         /*
         <b>text: </b>

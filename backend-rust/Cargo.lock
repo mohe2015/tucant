@@ -2487,6 +2487,7 @@ dependencies = [
  "diesel-async",
  "diesel_full_text_search",
  "dotenvy",
+ "ego-tree",
  "env_logger",
  "file-lock",
  "futures",
