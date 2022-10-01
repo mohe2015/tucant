@@ -1,7 +1,7 @@
-use std::{borrow::Borrow, rc::Rc, iter::repeat, fmt::Write};
+use std::{borrow::Borrow, rc::Rc, iter::repeat, fmt::Write, cell::RefCell};
 
 use actix_web::web::Data;
-use html5ever::{parse_document, tendril::TendrilSink, QualName};
+use html5ever::{parse_document, tendril::TendrilSink, QualName, LocalName};
 use markup5ever_rcdom::{Node, NodeData, RcDom, Handle};
 use scraper::Html;
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
@@ -51,6 +51,25 @@ fn stringify(node: &Node) -> String {
     let mut string = String::new();
     stringify_internal(0, node, &mut string);
     string
+}
+
+fn find_child_with(children: RefCell<Vec<Rc<Node>>>, tag: &str) -> Rc<Node> {
+    for child in children.borrow().iter() {
+        if let Node {
+            data:
+                NodeData::Element {
+                    name: QualName { prefix: None, ns: ns!(html), local: LocalName { .. } },
+                    attrs,
+                    template_contents,
+                    mathml_annotation_xml_integration_point,
+                },
+            ..
+        } = child.borrow()
+        {
+            return child
+        }
+    }
+    panic!();
 }
 
 #[actix_web::main]
