@@ -5,8 +5,8 @@ use ego_tree::NodeRef;
 use html5ever::{local_name, namespace_url, ns};
 use html5ever::{parse_document, tendril::TendrilSink, LocalName, QualName};
 use itertools::Itertools;
-use scraper::{Html, ElementRef};
 use scraper::node::Element;
+use scraper::{ElementRef, Html};
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
 
 #[actix_web::main]
@@ -40,57 +40,98 @@ async fn main() -> anyhow::Result<()> {
         let fragment = Html::parse_fragment(&module.content);
         let element = fragment.root_element();
 
+        println!("{}", element.inner_html());
+
         let mut children = element.children().multipeek();
 
         let child = children.next().unwrap();
         match child.value() {
             scraper::Node::Element(Element {
-                name: QualName {
-                    local,
-                    ..
-                },
+                name: QualName { local, .. },
                 ..
-            }) if local == "b" && ElementRef::wrap(child).unwrap().inner_html().ends_with(": ") => {
-                println!("section_start {}", ElementRef::wrap(child).unwrap().inner_html())
-            },
-            _ => 
-            panic!(),
+            }) if local == "b"
+                && ElementRef::wrap(child)
+                    .unwrap()
+                    .inner_html()
+                    .ends_with(": ") =>
+            {
+                println!(
+                    "section_start {}",
+                    ElementRef::wrap(child).unwrap().inner_html()
+                )
+            }
+            other => panic!("{:?}", other),
         }
 
         loop {
-            let child0 = children.peek();
-            let child1 = children.peek();
-            let child2 = children.peek();
-            match (child0.map(NodeRef::value), child1.map(NodeRef::value), child2.map(NodeRef::value)) {
-                (Some(scraper::Node::Element(Element {
-                    name: QualName {
-                        local: local1,
-                        ..
-                    },
+            let child = children.peek();
+            if match child.map(NodeRef::value) {
+                Some(scraper::Node::Element(Element {
+                    name: QualName { local, .. },
                     ..
-                })), Some(scraper::Node::Element(Element {
-                    name: QualName {
-                        local: local2,
-                        ..
-                    },
-                    ..
-                })), Some(scraper::Node::Element(Element {
-                    name: QualName {
-                        local: local3,
-                        ..
-                    },
-                    ..
-                }))) if local1 == "br" && local2 == "br" && local3 == "b" => {
-                    println!("next_section {}", ElementRef::wrap(*child2.unwrap()).unwrap().inner_html());
-                    children.next();
-                    children.next();
-                    children.next();
-                },
-                (None, None, None) => break,
+                })) if local == "br" => {
+                    false
+                }
+                None => break,
                 _ => {
-                    println!("this_section {}", ElementRef::wrap(*child0.unwrap()).unwrap().inner_html());
-                    children.next();
-                },
+                    true
+                }
+            } {
+                println!(
+                    "this_section {}",
+                    ElementRef::wrap(*child.unwrap()).unwrap().inner_html()
+                );
+                children.next();
+                continue;
+            }
+
+            let child = children.peek();
+            if match child.map(NodeRef::value) {
+                Some(scraper::Node::Element(Element {
+                    name: QualName { local, .. },
+                    ..
+                })) if local == "br" => {
+                    false
+                }
+                None => break,
+                _ => {
+                    true
+                }
+            } {
+                println!(
+                    "this_section {}",
+                    ElementRef::wrap(*child.unwrap()).unwrap().inner_html()
+                );
+                children.next();
+                continue;
+            }
+
+            let child = children.peek();
+            if match child.map(NodeRef::value) {
+                Some(scraper::Node::Element(Element {
+                    name: QualName { local, .. },
+                    ..
+                })) if local == "br" => {
+                    false
+                }
+                None => break,
+                _ => {
+                    true
+                }
+            } {
+                println!(
+                    "this_section {}",
+                    ElementRef::wrap(*child.unwrap()).unwrap().inner_html()
+                );
+                children.next();
+            } else {
+                println!(
+                    "next_section {}",
+                    ElementRef::wrap(*child.unwrap()).unwrap().inner_html()
+                );
+                children.next();
+                children.next();
+                children.next();
             }
         }
 
