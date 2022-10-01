@@ -54,7 +54,17 @@ async fn main() -> anyhow::Result<()> {
 
         let mut children = element
             .children()
-            .filter(|c| c.value().as_text().map(|t| t.trim() != "").unwrap_or(true))
+            .filter(|c| {
+                match c.value() {
+                    scraper::Node::Text(Text {
+                        text
+                    }) if text.trim() == "" => false,
+                    Node::Comment(Comment {
+                        comment
+                    }) if comment.trim() != "Start Descriptions" => false,
+                    _ => true
+                }
+            })
             .multipeek();
 
         /*
@@ -87,7 +97,7 @@ async fn main() -> anyhow::Result<()> {
                     name: QualName { local, .. },
                     ..
                 })) if local == "br" => {
-                    println!("skipping {}", debug_print(&child.unwrap()));
+                    //println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
                 Some(Node::Comment(Comment {
@@ -96,7 +106,7 @@ async fn main() -> anyhow::Result<()> {
                     children.next();
                     println!("NEXT PART");
                     break;
-                }
+                },
                 None => break,
                 _ => true,
             } {
@@ -111,7 +121,7 @@ async fn main() -> anyhow::Result<()> {
                     name: QualName { local, .. },
                     ..
                 })) if local == "br" => {
-                    println!("skipping {}", debug_print(&child.unwrap()));
+                    //println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
@@ -128,7 +138,7 @@ async fn main() -> anyhow::Result<()> {
                     name: QualName { local, .. },
                     ..
                 })) if local == "b" => {
-                    println!("skipping {}", debug_print(&child.unwrap()));
+                    //println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
@@ -169,7 +179,7 @@ async fn main() -> anyhow::Result<()> {
                 text
             }) if text.as_ref() == ":" =>
             {
-                println!("section2_start {}", debug_print(&child))
+                //println!("section2_start {}", debug_print(&child))
             }
             other => panic!("{:?}", other),
         }
@@ -181,7 +191,7 @@ async fn main() -> anyhow::Result<()> {
                 ..
             }) if local == "br" =>
             {
-                println!("section2_start {}", debug_print(&child))
+                //println!("section2_start {}", debug_print(&child))
             }
             other => panic!("{:?}", other),
         }
@@ -193,7 +203,7 @@ async fn main() -> anyhow::Result<()> {
                     name: QualName { local, .. },
                     ..
                 })) if local == "br" => {
-                    println!("skipping2 {}", debug_print(&child.unwrap()));
+                    //println!("skipping2 {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
@@ -210,7 +220,7 @@ async fn main() -> anyhow::Result<()> {
                     name: QualName { local, .. },
                     ..
                 })) if local == "b" => {
-                    println!("skipping2 {}", debug_print(&child.unwrap()));
+                    //println!("skipping2 {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
@@ -226,7 +236,7 @@ async fn main() -> anyhow::Result<()> {
                 Some(scraper::Node::Text(Text {
                     text
                 })) if text.as_ref() == ":" => {
-                    println!("skipping2 {}", debug_print(&child.unwrap()));
+                    //println!("skipping2 {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
@@ -243,7 +253,7 @@ async fn main() -> anyhow::Result<()> {
                     name: QualName { local, .. },
                     ..
                 })) if local == "br" => {
-                    println!("skipping {}", debug_print(&child.unwrap()));
+                    //println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
