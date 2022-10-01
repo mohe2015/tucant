@@ -1,8 +1,9 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, rc::Rc};
 
 use actix_web::web::Data;
-use ego_tree::{iter::Edge, NodeRef};
-use scraper::{Html};
+use html5ever::{parse_document, tendril::TendrilSink};
+use markup5ever_rcdom::{Node, NodeData, RcDom};
+use scraper::Html;
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
 
 #[actix_web::main]
@@ -33,15 +34,32 @@ async fn main() -> anyhow::Result<()> {
     };
 
     for module in modules {
-        let html_doc = Html::parse_document(&module.content);
+        let dom = parse_document(RcDom::default(), Default::default())
+            .from_utf8()
+            .one(module.content.as_bytes());
 
-        let element = html_doc.root_element();
+        if !dom.errors.is_empty() {
+            println!("\nParse errors:");
+            for err in dom.errors.iter() {
+                println!("    {}", err);
+            }
+        }
 
-        let mut traverse = element.traverse().peekable();
+        let children = dom.document.children.borrow_mut();
+        let mut children = children.iter().peekable();
 
         loop {
-            if let Some(Edge::Open(NodeRef { node, .. })) = traverse.peek() {
-            }
+            if let Some(Node {
+                data:
+                    NodeData::Element {
+                        name,
+                        attrs,
+                        template_contents,
+                        mathml_annotation_xml_integration_point,
+                    },
+                ..
+            }) = children.next().map(Rc::borrow)
+            {}
         }
 
         /*
