@@ -146,7 +146,6 @@ async fn main() -> anyhow::Result<()> {
 
         /*
         <br>
-        <br>
         <b>text</b>
         ":"
         <br>
@@ -188,23 +187,6 @@ async fn main() -> anyhow::Result<()> {
         }
 
         loop {
-            let child = children.peek();
-            if match child.map(NodeRef::value) {
-                Some(scraper::Node::Element(Element {
-                    name: QualName { local, .. },
-                    ..
-                })) if local == "br" => {
-                    println!("skipping2 {}", debug_print(&child.unwrap()));
-                    false
-                }
-                None => break,
-                _ => true,
-            } {
-                println!("this_section2 {}", debug_print(&child.unwrap()));
-                children.next();
-                continue;
-            }
-
             let child = children.peek();
             if match child.map(NodeRef::value) {
                 Some(scraper::Node::Element(Element {
@@ -270,7 +252,6 @@ async fn main() -> anyhow::Result<()> {
                 println!("this_section {}", debug_print(&child.unwrap()));
                 children.next();
             } else {
-                children.next();
                 children.next();
                 let child = children.next();
                 println!("next_section {}", debug_print(&child.unwrap()));
