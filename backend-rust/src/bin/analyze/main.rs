@@ -6,7 +6,7 @@ use html5ever::{local_name, namespace_url, ns};
 use html5ever::{parse_document, tendril::TendrilSink, LocalName, QualName};
 use itertools::Itertools;
 use scraper::node::Element;
-use scraper::{ElementRef, Html};
+use scraper::{ElementRef, Html, Node};
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
 
 #[actix_web::main]
@@ -43,6 +43,15 @@ async fn main() -> anyhow::Result<()> {
         println!("{}", element.inner_html());
 
         let mut children = element.children().multipeek();
+
+        // skip whitespace only
+        while let Some(Node::Text(text)) = children.peek().map(NodeRef::value) {
+            if text.trim() == "" {
+                children.next();
+            } else {
+                break;
+            }
+        }
 
         let child = children.next().unwrap();
         match child.value() {
