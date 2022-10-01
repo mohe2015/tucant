@@ -8,8 +8,6 @@ use std::{
 };
 
 use chrono::Utc;
-use once_cell::sync::Lazy;
-use regex::Regex;
 use reqwest::header::HeaderValue;
 use scraper::Html;
 use serde::{Deserialize, Serialize};
@@ -54,22 +52,7 @@ pub enum RegistrationEnum {
     Modules(Vec<Module>),
 }
 
-static NORMALIZED_NAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"[ /)(.]+").unwrap());
-
 impl TucanUser {
-    pub fn normalize(string: &str) -> String {
-        // maybe do in postgres as this is generated?
-        // &amp; replace with -
-        // replace , to -
-        // remove consecutive -
-        // remove [] to -
-        // remove - at end and start
-        NORMALIZED_NAME_REGEX
-            .replace_all(string, "-")
-            .trim_matches('-')
-            .to_lowercase()
-    }
-
     pub(crate) async fn fetch_document(&self, url: &TucanProgram) -> anyhow::Result<Html> {
         let cookie = format!("cnsc={}", self.session.id);
 
@@ -203,7 +186,7 @@ impl TucanUser {
             tucan_last_checked: Utc::now().naive_utc(),
             title: module_name.unwrap().to_string(),
             credits: Some(credits),
-            module_id: TucanUser::normalize(module_id),
+            module_id: module_id.to_string(),
             content,
             done: true,
         };
@@ -300,7 +283,7 @@ impl TucanUser {
             tucan_last_checked: Utc::now().naive_utc(),
             title: course_name.unwrap().to_string(),
             sws,
-            course_id: TucanUser::normalize(course_id),
+            course_id: course_id.to_string(),
             content,
             done: true,
         };
@@ -343,7 +326,6 @@ impl TucanUser {
         };
 
         let name = url_element.inner_html();
-        let _normalized_name = TucanUser::normalize(&name);
 
         Ok(ModuleMenu {
             tucan_id: url.path,
@@ -423,7 +405,6 @@ impl TucanUser {
             .unwrap();
 
         let name = url_element.inner_html();
-        let _normalized_name = TucanUser::normalize(&name);
 
         let child_type = match (submenu_list, modules_list) {
             (_, Some(_)) => 2,
