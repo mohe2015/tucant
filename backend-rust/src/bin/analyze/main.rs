@@ -1,10 +1,57 @@
-use std::{borrow::Borrow, rc::Rc};
+use std::{borrow::Borrow, rc::Rc, iter::repeat, fmt::Write};
 
 use actix_web::web::Data;
-use html5ever::{parse_document, tendril::TendrilSink};
-use markup5ever_rcdom::{Node, NodeData, RcDom};
+use html5ever::{parse_document, tendril::TendrilSink, QualName};
+use markup5ever_rcdom::{Node, NodeData, RcDom, Handle};
 use scraper::Html;
 use tucant::{models::Module, schema::modules_unfinished, tucan::Tucan};
+use html5ever::{local_name, ns, namespace_url};
+
+fn stringify_internal(indent: usize, node: &Node, s: &mut String) {
+    // FIXME: don't allocate
+    write!(s, "{}", repeat(" ").take(indent).collect::<String>()).unwrap();
+    match node.data {
+        NodeData::Document => writeln!(s, "#Document").unwrap(),
+
+        NodeData::Doctype {
+            ref name,
+            ref public_id,
+            ref system_id,
+        } => writeln!(s, "<!DOCTYPE {} \"{}\" \"{}\">", name, public_id, system_id).unwrap(),
+
+        NodeData::Text { ref contents } => {
+            writeln!(s, "#text: {}", contents.borrow().escape_default()).unwrap()
+        },
+
+        NodeData::Comment { ref contents } => writeln!(s, "<!-- {} -->", contents.escape_default()).unwrap(),
+
+        NodeData::Element {
+            ref name,
+            ref attrs,
+            ..
+        } => {
+            assert!(name.ns == ns!(html));
+            writeln!(s, "<{}", name.local).unwrap();
+            for attr in attrs.borrow().iter() {
+                assert!(attr.name.ns == ns!());
+                writeln!(s," {}=\"{}\"", attr.name.local, attr.value).unwrap();
+            }
+            writeln!(s, ">").unwrap();
+        },
+
+        NodeData::ProcessingInstruction { .. } => unreachable!(),
+    }
+
+    for child in node.children.borrow().iter() {
+        stringify_internal(indent + 4, child, s);
+    }
+}
+
+fn stringify(node: &Node) -> String {
+    let mut string = String::new();
+    stringify_internal(0, node, &mut string);
+    string
+}
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
@@ -46,21 +93,27 @@ async fn main() -> anyhow::Result<()> {
         }
 
         let children = dom.document.children.borrow_mut();
-        let mut children = children.iter().peekable();
+        let children = children.iter().peekable();
 
-        loop {
-            if let Some(Node {
+        for child in children {
+            if let Node {
                 data:
                     NodeData::Element {
-                        name,
+                        name: QualName { prefix: None, ns: ns!(html), local: local_name!("html") },
                         attrs,
                         template_contents,
                         mathml_annotation_xml_integration_point,
                     },
                 ..
-            }) = children.next().map(Rc::borrow)
-            {}
+            } = child.borrow()
+            {
+                println!("got them {}", stringify(child));
+            } else {
+                //println!("fail {}", stringify(child));
+            }
         }
+
+        break;
 
         /*
         <b>text: </b>
