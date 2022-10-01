@@ -1,9 +1,7 @@
-
-
 use actix_web::web::Data;
 use ego_tree::NodeRef;
 
-use html5ever::{QualName};
+use html5ever::QualName;
 use itertools::Itertools;
 use scraper::node::Element;
 use scraper::{ElementRef, Html, Node};
@@ -54,16 +52,10 @@ async fn main() -> anyhow::Result<()> {
 
         println!("{}", element.inner_html());
 
-        let mut children = element.children().multipeek();
-
-        // skip whitespace only
-        while let Some(Node::Text(text)) = children.peek().map(NodeRef::value) {
-            if text.trim() == "" {
-                children.next();
-            } else {
-                break;
-            }
-        }
+        let mut children = element
+            .children()
+            .filter(|c| c.value().as_text().map(|t| t.trim() != "").unwrap_or(true))
+            .multipeek();
 
         let child = children.next().unwrap();
         match child.value() {
@@ -76,10 +68,7 @@ async fn main() -> anyhow::Result<()> {
                     .inner_html()
                     .ends_with(": ") =>
             {
-                println!(
-                    "section_start {}",
-                    debug_print(&child)
-                )
+                println!("section_start {}", debug_print(&child))
             }
             other => panic!("{:?}", other),
         }
@@ -91,17 +80,13 @@ async fn main() -> anyhow::Result<()> {
                     name: QualName { local, .. },
                     ..
                 })) if local == "br" => {
+                    println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
-                _ => {
-                    true
-                }
+                _ => true,
             } {
-                println!(
-                    "this_section {}",
-                    debug_print(&child.unwrap())
-                );
+                println!("this_section {}", debug_print(&child.unwrap()));
                 children.next();
                 continue;
             }
@@ -112,17 +97,13 @@ async fn main() -> anyhow::Result<()> {
                     name: QualName { local, .. },
                     ..
                 })) if local == "br" => {
+                    println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
-                _ => {
-                    true
-                }
+                _ => true,
             } {
-                println!(
-                    "this_section {}",
-                    debug_print(&child.unwrap())
-                );
+                println!("this_section {}", debug_print(&child.unwrap()));
                 children.next();
                 continue;
             }
@@ -132,24 +113,17 @@ async fn main() -> anyhow::Result<()> {
                 Some(scraper::Node::Element(Element {
                     name: QualName { local, .. },
                     ..
-                })) if local == "br" => {
+                })) if local == "b" => {
+                    println!("skipping {}", debug_print(&child.unwrap()));
                     false
                 }
                 None => break,
-                _ => {
-                    true
-                }
+                _ => true,
             } {
-                println!(
-                    "this_section {}",
-                    debug_print(&child.unwrap())
-                );
+                println!("this_section {}", debug_print(&child.unwrap()));
                 children.next();
             } else {
-                println!(
-                    "next_section {}",
-                    debug_print(&child.unwrap())
-                );
+                println!("next_section {}", debug_print(&child.unwrap()));
                 children.next();
                 children.next();
                 children.next();
