@@ -11,8 +11,6 @@ use chrono::Utc;
 use ego_tree::NodeRef;
 use futures::{stream::FuturesUnordered, StreamExt};
 use itertools::Itertools;
-use once_cell::sync::Lazy;
-use regex::Regex;
 use reqwest::header::HeaderValue;
 use scraper::{ElementRef, Html};
 use serde::{Deserialize, Serialize};
