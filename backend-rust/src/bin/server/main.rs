@@ -6,6 +6,7 @@ mod csrf_middleware;
 mod s_course;
 mod s_get_modules;
 mod s_module;
+mod s_my_modules;
 mod s_search_course;
 mod s_search_module;
 mod s_setup;
@@ -24,11 +25,12 @@ use itertools::Itertools;
 use s_course::course;
 use s_get_modules::get_modules;
 use s_module::module;
+use s_my_modules::my_modules;
 use s_search_course::search_course;
 use s_search_module::search_module;
 use s_setup::setup;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::fmt::Display;
 use tokio::{
     fs::{self, OpenOptions},
@@ -146,7 +148,7 @@ async fn main() -> anyhow::Result<()> {
 
         let app = TypescriptableApp {
             app,
-            codes: HashSet::new(),
+            codes: BTreeSet::new(),
         };
         let app = app
             .service(index)
@@ -156,7 +158,8 @@ async fn main() -> anyhow::Result<()> {
             .service(search_module)
             .service(search_course)
             .service(course)
-            .service(module);
+            .service(module)
+            .service(my_modules);
 
         let should_we_block = true;
         let lock_for_writing = FileOptions::new().write(true).create(true).truncate(true);

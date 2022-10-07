@@ -14,9 +14,20 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import Alert from "@mui/material/Alert";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { setLoggedIn } from "../redux/user/userSlice";
 
 export default function SignIn() {
   const navigate = useNavigate();
+
+  const isLoggedIn = useAppSelector((state) => state.user.loggedIn);
+
+  // if cookie id is set, redirect to home
+  React.useEffect(() => {
+    if (isLoggedIn) navigate("/");
+  }, [isLoggedIn]);
+
+  const dispatch = useAppDispatch();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +59,7 @@ export default function SignIn() {
 
       const response = await login(form);
       if (response.success) {
+        dispatch(setLoggedIn(true));
         navigate("/");
       } else {
         setError(String("Falscher Nutzername oder falsches Passwort!"));

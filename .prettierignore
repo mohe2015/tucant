@@ -2,5 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+README.md
 /backend-rust/target
 /frontend-react/node_modules
+/frontend-react/src/api.ts

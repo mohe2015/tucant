@@ -8,8 +8,13 @@ use std::{
 };
 
 use chrono::Utc;
+use ego_tree::NodeRef;
+use futures::{stream::FuturesUnordered, StreamExt};
+use itertools::Itertools;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use reqwest::header::HeaderValue;
-use scraper::Html;
+use scraper::{ElementRef, Html};
 use serde::{Deserialize, Serialize};
 use tucant_derive::Typescriptable;
 
@@ -19,7 +24,7 @@ use crate::{
     s,
     tucan::Tucan,
     url::{
-        parse_tucan_url, Coursedetails, Moduledetails, Registration, RootRegistration,
+        parse_tucan_url, Coursedetails, Moduledetails, Mymodules, Registration, RootRegistration,
         TucanProgram, TucanUrl,
     },
 };
@@ -162,22 +167,29 @@ impl TucanUser {
 
         let courses = document
             .select(&s(r#"a[name="eventLink"]"#))
-            .map(|c| Course {
-                tucan_id: TryInto::<Coursedetails>::try_into(
-                    parse_tucan_url(&format!(
-                        "https://www.tucan.tu-darmstadt.de{}",
-                        c.value().attr("href").unwrap()
-                    ))
-                    .program,
-                )
-                .unwrap()
-                .id,
-                tucan_last_checked: Utc::now().naive_utc(),
-                title: "TODO".to_string(),
-                course_id: "TODO".to_string(),
-                sws: 0,
-                content: "TODO".to_string(),
-                done: false,
+            .map(|e| e.parent().unwrap().parent().unwrap())
+            .unique_by(NodeRef::id)
+            .map(|node| {
+                let element_ref = ElementRef::wrap(node).unwrap();
+                let selector = &s("a");
+                let mut links = element_ref.select(selector);
+                Course {
+                    tucan_last_checked: Utc::now().naive_utc(),
+                    course_id: links.next().unwrap().inner_html(),
+                    title: links.next().unwrap().inner_html(),
+                    tucan_id: TryInto::<Coursedetails>::try_into(
+                        parse_tucan_url(&format!(
+                            "https://www.tucan.tu-darmstadt.de{}",
+                            links.next().unwrap().value().attr("href").unwrap()
+                        ))
+                        .program,
+                    )
+                    .unwrap()
+                    .id,
+                    sws: 0,
+                    content: "".to_string(),
+                    done: false,
+                }
             })
             .collect::<Vec<_>>();
 
@@ -438,22 +450,31 @@ impl TucanUser {
             (_, Some(list)) => {
                 let modules: Vec<Module> = list
                     .select(&s(r#"td.tbsubhead.dl-inner a[href]"#))
-                    .map(|e| Module {
-                        tucan_id: TryInto::<Moduledetails>::try_into(
-                            parse_tucan_url(&format!(
-                                "https://www.tucan.tu-darmstadt.de{}",
-                                e.value().attr("href").unwrap()
-                            ))
-                            .program,
-                        )
-                        .unwrap()
-                        .id,
-                        tucan_last_checked: Utc::now().naive_utc(),
-                        title: "TODO".to_string(),
-                        module_id: "TODO".to_string(),
-                        credits: None,
-                        content: "TODO".to_string(),
-                        done: false,
+                    .map(|e| {
+                        let mut text = e.text();
+                        Module {
+                            tucan_id: TryInto::<Moduledetails>::try_into(
+                                parse_tucan_url(&format!(
+                                    "https://www.tucan.tu-darmstadt.de{}",
+                                    e.value().attr("href").unwrap()
+                                ))
+                                .program,
+                            )
+                            .unwrap()
+                            .id,
+                            tucan_last_checked: Utc::now().naive_utc(),
+                            module_id: text
+                                .next()
+                                .unwrap_or_else(|| panic!("{:?}", e.text().collect::<Vec<_>>()))
+                                .to_string(),
+                            title: text
+                                .next()
+                                .unwrap_or_else(|| panic!("{:?}", e.text().collect::<Vec<_>>()))
+                                .to_string(),
+                            credits: None,
+                            content: "".to_string(),
+                            done: false,
+                        }
                     })
                     .collect();
 
@@ -497,7 +518,7 @@ impl TucanUser {
                         ModuleMenu {
                             tucan_id: child,
                             tucan_last_checked: utc,
-                            name: "TODO".to_string(),
+                            name: e.inner_html().trim().to_string(),
                             child_type: 0,
                             parent: Some(url.path.clone()),
                         }
@@ -527,5 +548,30 @@ impl TucanUser {
         };
 
         Ok((module_menu, return_value))
+    }
+
+    pub async fn my_modules(&self) -> anyhow::Result<Vec<Module>> {
+        let document = self.fetch_document(&Mymodules.clone().into()).await?;
+
+        let my_modules = document
+            .select(&s("tbody tr a"))
+            .map(|link| {
+                TryInto::<Moduledetails>::try_into(
+                    parse_tucan_url(&format!(
+                        "https://www.tucan.tu-darmstadt.de{}",
+                        link.value().attr("href").unwrap()
+                    ))
+                    .program,
+                )
+                .unwrap()
+            })
+            .map(|moduledetails| self.module(moduledetails))
+            .collect::<FuturesUnordered<_>>();
+
+        let results: Vec<_> = my_modules.collect().await;
+
+        let results: anyhow::Result<Vec<_>> = results.into_iter().collect();
+
+        Ok(results?.into_iter().map(|r| r.0).collect())
     }
 }

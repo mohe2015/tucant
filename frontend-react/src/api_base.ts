@@ -12,7 +12,17 @@ export async function genericFetch(
     body: JSON.stringify(input),
   });
   if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
+    let errorMessage;
+    try {
+      errorMessage = `${response.status} ${
+        response.statusText
+      }: ${await response.text()}`;
+    } catch (err) {
+      errorMessage = `${response.status} ${
+        response.statusText
+      }, while loading error body: ${String(err)}`;
+    }
+    throw new Error(errorMessage);
   }
   return (await response.json()) as unknown;
 }

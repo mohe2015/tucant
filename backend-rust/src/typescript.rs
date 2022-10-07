@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::{BTreeSet, VecDeque};
 
 use actix_web::{
     dev::{HttpServiceFactory, ServiceFactory, ServiceRequest},
@@ -9,8 +9,8 @@ use chrono::NaiveDateTime;
 
 pub trait Typescriptable {
     fn name() -> String;
-    fn code() -> HashSet<String> {
-        HashSet::new()
+    fn code() -> BTreeSet<String> {
+        BTreeSet::new()
     }
 }
 
@@ -72,7 +72,7 @@ impl<T: Typescriptable> Typescriptable for Vec<T> {
     fn name() -> String {
         T::name() + "[]"
     }
-    fn code() -> HashSet<String> {
+    fn code() -> BTreeSet<String> {
         T::code()
     }
 }
@@ -81,7 +81,7 @@ impl<T: Typescriptable> Typescriptable for VecDeque<T> {
     fn name() -> String {
         T::name() + "[]"
     }
-    fn code() -> HashSet<String> {
+    fn code() -> BTreeSet<String> {
         T::code()
     }
 }
@@ -90,7 +90,7 @@ impl<T: Typescriptable> Typescriptable for Option<T> {
     fn name() -> String {
         T::name() + " | null"
     }
-    fn code() -> HashSet<String> {
+    fn code() -> BTreeSet<String> {
         T::code()
     }
 }
@@ -99,7 +99,7 @@ impl<T: Typescriptable, E> Typescriptable for Result<T, E> {
     fn name() -> String {
         T::name()
     }
-    fn code() -> HashSet<String> {
+    fn code() -> BTreeSet<String> {
         T::code()
     }
 }
@@ -108,14 +108,14 @@ impl<T: Typescriptable> Typescriptable for Json<T> {
     fn name() -> String {
         T::name()
     }
-    fn code() -> HashSet<String> {
+    fn code() -> BTreeSet<String> {
         T::code()
     }
 }
 
 pub struct TypescriptableApp<T> {
     pub app: actix_web::App<T>,
-    pub codes: HashSet<String>,
+    pub codes: BTreeSet<String>,
 }
 
 impl<T> TypescriptableApp<T>

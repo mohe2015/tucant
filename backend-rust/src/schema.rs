@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: The tucant Contributors
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 // @generated automatically by Diesel CLI.
 
 diesel::table! {

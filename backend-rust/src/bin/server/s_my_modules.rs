@@ -11,29 +11,23 @@ use actix_web::web::Json;
 
 use actix_web::web::Data;
 
+use tucant::models::Module;
+use tucant::tucan::Tucan;
 use tucant::tucan_user::TucanSession;
-use tucant::url::Coursedetails;
-use tucant::{models::Course, tucan::Tucan};
 use tucant_derive::ts;
 
 #[ts]
-#[post("/course")]
-pub async fn course(
+#[post("/my_modules")]
+pub async fn my_modules(
     session: Session,
     tucan: Data<Tucan>,
-    input: Json<String>,
-) -> Result<Json<Course>, MyError> {
+    _input: Json<()>,
+) -> Result<Json<Vec<Module>>, MyError> {
     match session.get::<TucanSession>("session").unwrap() {
         Some(session) => {
-            let binary_path = base64::decode(input.as_bytes()).unwrap();
-
             let tucan = tucan.continue_session(session).await.unwrap();
 
-            let result = tucan
-                .course(Coursedetails {
-                    id: binary_path.clone(),
-                })
-                .await?;
+            let result = tucan.my_modules().await?;
 
             Ok(Json(result))
         }

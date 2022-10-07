@@ -5,14 +5,13 @@
 import { Breadcrumbs, Link } from "@mui/material";
 import Alert from "@mui/material/Alert";
 import LinearProgress from "@mui/material/LinearProgress";
-import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { RouterLink } from "../MiniDrawer";
 import InitialFetch from "./InitialFetch";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { get_modules, ModuleMenuResponse } from "../api";
+import { ModuleList } from "../components/ModuleList";
 
 export default function Modules() {
   const location = useLocation();
@@ -62,26 +61,7 @@ export default function Modules() {
           ))}
         </Breadcrumbs>
       ))}
-      <List>
-        {data != null &&
-          data.entries.type === "Submenu" &&
-          data.entries.value.map((e) => (
-            <RouterLink
-              key={e.tucan_id}
-              to={`/modules/${e.tucan_id}`}
-              text={e.name}
-            ></RouterLink>
-          ))}
-        {data != null &&
-          data.entries.type === "Modules" &&
-          data.entries.value.map((e) => (
-            <RouterLink
-              key={e.tucan_id}
-              to={`/module/${e.tucan_id}`}
-              text={e.title}
-            ></RouterLink>
-          ))}
-      </List>
+      {data && <ModuleList listData={data} />}
 
       <InitialFetch></InitialFetch>
     </>

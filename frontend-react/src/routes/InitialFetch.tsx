@@ -6,9 +6,26 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import Alert from "@mui/material/Alert";
 import { useState } from "react";
 
+type buttonVariantType = "primary" | "warning" | "success" | undefined;
 export default function InitialFetch() {
   const [data, setData] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [buttonVariant, setButtonVariant] =
+    useState<buttonVariantType>("primary");
+  const setSuccess = (success: boolean | null) => {
+    switch (success) {
+      default:
+      case null:
+        setButtonVariant("primary");
+        break;
+      case false:
+        setButtonVariant("warning");
+        break;
+      case true:
+        setButtonVariant("success");
+        break;
+    }
+  };
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -16,8 +33,10 @@ export default function InitialFetch() {
       {error && <Alert severity="error">{error}</Alert>}
       <LoadingButton
         loading={loading}
+        color={buttonVariant}
         onClick={() => {
           (async () => {
+            setSuccess(null);
             setError(null);
             setLoading(true);
 
@@ -25,9 +44,10 @@ export default function InitialFetch() {
               credentials: "include",
               method: "POST",
               headers: {
+                "Content-Type": "application/json",
                 "x-csrf-protection": "tucant",
               },
-              body: "",
+              body: "null",
             });
 
             const reader = response.body?.getReader();
@@ -35,12 +55,16 @@ export default function InitialFetch() {
             while (!(value = await reader?.read())?.done) {
               setData(new TextDecoder().decode(value?.value));
             }
+            setData("Fertig");
+            setSuccess(true);
           })()
             .catch((error) => {
               setError(String(error));
+              setSuccess(false);
             })
             .finally(() => {
               setLoading(false);
+              setSuccess(true);
             });
         }}
       >

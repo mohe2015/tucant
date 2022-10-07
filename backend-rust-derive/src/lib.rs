@@ -86,8 +86,8 @@ fn handle_item_fn(node: &ItemFn) -> syn::Result<TokenStream> {
                     #name_string.to_string()
                 }
 
-                fn code() -> ::std::collections::HashSet<String> {
-                    let mut result = ::std::collections::HashSet::from(["export async function ".to_string() + &<#name as tucant::typescript::Typescriptable>::name() + "(input: " + &#typescriptable_arg_type_name + ")"
+                fn code() -> ::std::collections::BTreeSet<String> {
+                    let mut result = ::std::collections::BTreeSet::from(["export async function ".to_string() + &<#name as tucant::typescript::Typescriptable>::name() + "(input: " + &#typescriptable_arg_type_name + ")"
                     + ": Promise<" + &#typescriptable_return_type_name + "> {" +
                     r#"
     return await genericFetch("http://localhost:8080"# + #url_path + r#"", input) as "# + &#typescriptable_return_type_name +
@@ -281,8 +281,8 @@ fn typescriptable_impl(input: DeriveInput) -> syn::Result<TokenStream> {
                 #name_string.to_string()
             }
 
-            fn code() -> ::std::collections::HashSet<String> {
-                let mut result = ::std::collections::HashSet::from(["export type ".to_string() + &#name::name() + " = \n"
+            fn code() -> ::std::collections::BTreeSet<String> {
+                let mut result = ::std::collections::BTreeSet::from(["export type ".to_string() + &#name::name() + " =\n"
                 #members
                 ]);
                 #members_code

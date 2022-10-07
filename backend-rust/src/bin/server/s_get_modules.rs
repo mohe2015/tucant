@@ -138,6 +138,6 @@ pub async fn get_modules<'a>(
 
             Ok(Json(value))
         }
-        None => Err(std::io::Error::new(ErrorKind::Other, "oh no!").into()),
+        None => Err(std::io::Error::new(ErrorKind::Other, "no session!").into()),
     }
 }
