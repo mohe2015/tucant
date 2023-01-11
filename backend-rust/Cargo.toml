@@ -44,7 +44,7 @@ itertools = { version = "0.10", optional = true }
 either = { version = "1", optional = true }
 once_cell = { version = "1", optional = true }
 diesel_full_text_search = { git = "https://github.com/mohe2015/diesel_full_text_search.git", branch = "setweight", optional = true }
-base64 = { version = "0.20" }
+base64 = { version = "0.21" }
 tucant_derive = { path = "../backend-rust-derive", optional = true }
 file-lock = { version = "2", optional = true }
 tracing = "0.1"
