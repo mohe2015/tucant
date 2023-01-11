@@ -262,6 +262,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ea22880d78093b0cbe17c89f64a7d457941e65759157ec6cb31a31d652b05e5"
 
 [[package]]
+name = "base64"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4a4ddaa51a5bc52a6948f74c06d20aaaddb71924eab79b8c97a8c556e942d6a"
+
+[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -695,7 +701,7 @@ dependencies = [
 [[package]]
 name = "diesel"
 version = "2.0.2"
-source = "git+https://github.com/diesel-rs/diesel.git#49b39fc9f92018b41b48bba2b9401dad953899fe"
+source = "git+https://github.com/diesel-rs/diesel.git#df635ffc57d91bb7a892b261c5d39d55816ef17c"
 dependencies = [
  "bitflags",
  "byteorder",
@@ -723,7 +729,7 @@ dependencies = [
 [[package]]
 name = "diesel_derives"
 version = "2.0.1"
-source = "git+https://github.com/diesel-rs/diesel.git#49b39fc9f92018b41b48bba2b9401dad953899fe"
+source = "git+https://github.com/diesel-rs/diesel.git#df635ffc57d91bb7a892b261c5d39d55816ef17c"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -2902,7 +2908,7 @@ dependencies = [
  "async-stream",
  "axum",
  "axum-extra",
- "base64 0.20.0",
+ "base64 0.21.0",
  "chrono",
  "deadpool",
  "derive_more",
