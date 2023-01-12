@@ -15,7 +15,7 @@ categories = ["accessibility", "api-bindings", "caching"]
 serde = { version = "1", features = ["derive"] }
 serde_repr = "0.1"
 serde_with = "2"
-tucant_language_server_derive = { path = "../tucant-language-server-derive" }
+out-dir-include = { path = "../out-dir-include" }
 
 [build-dependencies]
 tucant_language_server_derive_internal = { path = "../tucant-language-server-derive-internal" }

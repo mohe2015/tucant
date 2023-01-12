@@ -1,12 +1,11 @@
 [package]
-name = "debug-adapter-protocol-macro"
+name = "out-dir-include"
 version = "0.1.0"
 edition = "2021"
-readme = "README.md"
-authors = [ "Moritz Hedtke <Moritz.Hedtke@t-online.de>" ]
 description = "A nicer, faster and more featureful frontend to TUCaN"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/mohe2015/tucant"
+readme = "README.md"
 keywords = ["tucan"]
 categories = ["accessibility", "api-bindings", "caching"]
 
@@ -16,8 +15,5 @@ categories = ["accessibility", "api-bindings", "caching"]
 proc-macro = true
 
 [dependencies]
-debug-adapter-protocol-macro-impl = { path = "../debug-adapter-protocol-macro-impl" }
-syn = { version = "1", features = ["full", "extra-traits"] }
-proc-macro2 = { version = "1", features = ["span-locations"] }
 quote = "1"
-anyhow = "1.0.68"
+syn = { version = "1", features = ["full", "extra-traits"] }

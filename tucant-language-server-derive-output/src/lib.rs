@@ -7,4 +7,4 @@
     clippy::module_name_repetitions
 )]
 
-tucant_language_server_derive::magic_include!();
+out_dir_include::out_dir_include!("lsp.rs");

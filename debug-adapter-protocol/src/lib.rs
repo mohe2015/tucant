@@ -1,16 +1,10 @@
-pub mod debug_adapter_protocol;
+#![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
+#![allow(
+    clippy::missing_panics_doc,
+    clippy::missing_errors_doc,
+    clippy::multiple_crate_versions,
+    clippy::vec_box,
+    clippy::module_name_repetitions
+)]
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+out_dir_include::out_dir_include!("debug-adapter-protocol.rs");

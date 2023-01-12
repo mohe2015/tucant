@@ -1,5 +1,5 @@
 [workspace]
-members = ["backend-rust", "backend-rust-derive", "backend-rust-derive-lib", "tucant-language-server", "tucant-language-server-derive", "tucant-language-server-derive-internal", "tucant-language-server-derive-output", "debug-adapter-protocol-macro-impl", "debug-adapter-protocol-macro", "debug-adapter-protocol"]
+members = ["backend-rust", "backend-rust-derive", "backend-rust-derive-lib", "tucant-language-server", "out-dir-include", "tucant-language-server-derive-internal", "tucant-language-server-derive-output", "debug-adapter-protocol-macro-impl", "debug-adapter-protocol"]
 
 [patch.crates-io]
 diesel = { git = "https://github.com/diesel-rs/diesel.git" }

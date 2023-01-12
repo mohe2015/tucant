@@ -13,4 +13,10 @@ categories = ["accessibility", "api-bindings", "caching"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-debug-adapter-protocol-macro = { path = "../debug-adapter-protocol-macro" }
+out-dir-include = { path = "../out-dir-include" }
+
+[build-dependencies]
+debug-adapter-protocol-macro-impl = { path = "../debug-adapter-protocol-macro-impl" }
+prettyplease = "0.1"
+syn = { version = "1", features = ["full", "extra-traits"] }
+proc-macro2 = { version = "1", features = ["span-locations"] }

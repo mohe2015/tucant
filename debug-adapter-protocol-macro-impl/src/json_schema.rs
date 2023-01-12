@@ -16,11 +16,11 @@ use crate::{
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct JSONSchema {
-    schema: LitStr,
-    title: LitStr,
-    description: LitStr,
-    r#type: LitStr,
-    definitions: Vec<Definition>,
+    pub schema: LitStr,
+    pub title: LitStr,
+    pub description: LitStr,
+    pub r#type: LitStr,
+    pub definitions: Vec<KeyValue<Definition>>,
 }
 
 impl TryFrom<JSONValue> for JSONSchema {
@@ -39,7 +39,10 @@ impl TryFrom<JSONValue> for JSONSchema {
             let (parsed_definitions, failed_definitions): (Vec<_>, Vec<_>) = definitions
                 .into_iter()
                 .map(|definition| -> Result<_, syn::Error> {
-                    TryInto::<Definition>::try_into(definition.value)
+                    Ok(KeyValue {
+                        key: definition.key,
+                        value: TryInto::<Definition>::try_into(definition.value)?,
+                    })
                 })
                 .partition_result();
 
@@ -66,9 +69,9 @@ impl TryFrom<JSONValue> for JSONSchema {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct Definition {
-    title: Option<LitStr>,
-    description: Option<LitStr>,
-    definition_type: DefinitionType,
+    pub title: Option<LitStr>,
+    pub description: Option<LitStr>,
+    pub definition_type: DefinitionType,
 }
 
 impl TryFrom<JSONValue> for Definition {
@@ -177,7 +180,7 @@ impl TryFrom<(Brace, BTreeMap<LitStrOrd, JSONValue>)> for DefinitionType {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct RefDefinition {
-    name: LitStr,
+    pub name: LitStr,
 }
 
 impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for RefDefinition {
@@ -197,7 +200,7 @@ impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for RefDefinition {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct AllOfDefinition {
-    definitions: Vec<Definition>,
+    pub definitions: Vec<Definition>,
 }
 
 impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for AllOfDefinition {
@@ -236,7 +239,7 @@ impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for AllOfDefinition {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct OneOfDefinition {
-    definitions: Vec<Definition>,
+    pub definitions: Vec<Definition>,
 }
 
 impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for OneOfDefinition {
@@ -276,8 +279,8 @@ impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for OneOfDefinition {
 #[derive(Debug)]
 pub struct ObjectType {
     // bool required
-    properties: Vec<KeyValue<(Definition, bool)>>,
-    additional_properties_type: Box<Definition>,
+    pub properties: Vec<KeyValue<(Definition, bool)>>,
+    pub additional_properties_type: Box<Definition>,
 }
 
 /*
@@ -412,8 +415,8 @@ impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for ObjectType {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct StringType {
-    enum_values: Vec<(LitStr, Option<LitStr>)>,
-    exhaustive: bool, // if enum_values empty and this is false it's a normal string
+    pub enum_values: Vec<(LitStr, Option<LitStr>)>,
+    pub exhaustive: bool, // if enum_values empty and this is false it's a normal string
 }
 
 impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for StringType {
@@ -492,7 +495,7 @@ impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for StringType {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct ArrayType {
-    item_type: Option<Box<Definition>>,
+    pub item_type: Box<Definition>,
 }
 
 impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for ArrayType {
@@ -503,7 +506,8 @@ impl TryFrom<BTreeMap<LitStrOrd, JSONValue>> for ArrayType {
             .remove(&LitStrOrd(LitStr::new("items", Span::call_site())))
             .map(TryInto::<Definition>::try_into)
             .transpose()?
-            .map(Box::new);
+            .map(Box::new)
+            .unwrap(); // TODO FIXME
 
         unexpected_keys(map, Ok(Self { item_type }))
     }
